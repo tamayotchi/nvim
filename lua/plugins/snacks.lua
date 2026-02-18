@@ -10,8 +10,8 @@ return {
     scroll = { enabled = true },
     statuscolumn = { enabled = false }, -- we set this in options.lua
     words = { enabled = true },
-    image = { enabled = true },
-    terminal = { enabled = true },
+    image = { enabled = false },
+    terminal = { enabled = false },
     explorer = { enabled = true },
   },
   keys = {
@@ -28,32 +28,6 @@ return {
         Snacks.explorer()
       end,
       desc = "File Explorer",
-    },
-    {
-      "<c-/>",
-      function()
-        Snacks.terminal(nil, { cwd = vim.fn.getcwd() })
-      end,
-      desc = "Terminal",
-    },
-    {
-      "<c-_>",
-      function()
-        Snacks.terminal(nil, { cwd = vim.fn.getcwd() })
-      end,
-      desc = "which_key_ignore",
-    },
-    {
-      "<C-/>",
-      "<cmd>close<cr>",
-      mode = "t",
-      desc = "Hide Terminal",
-    },
-    {
-      "<C-_>",
-      "<cmd>close<cr>",
-      mode = "t",
-      desc = "which_key_ignore",
     },
   },
 }
