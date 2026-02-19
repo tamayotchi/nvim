@@ -9,7 +9,7 @@ return {
     lazy = vim.fn.argc(-1) == 0, -- load treesitter early when opening a file from the cmdline
     event = { "BufReadPost", "BufNewFile", "BufWritePre", "VeryLazy" },
     cmd = { "TSUpdate", "TSInstall", "TSLog", "TSUninstall" },
-    main = "nvim-treesitter.configs",
+    main = "nvim-treesitter",
     opts = {
       highlight = { enable = true },
       indent = { enable = true },

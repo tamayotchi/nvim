@@ -94,8 +94,8 @@ return {
       local telescope = require("telescope")
 
       telescope.setup(opts)
-      telescope.load_extension("fzf")
-      telescope.load_extension("ui-select")
+      pcall(telescope.load_extension, "fzf")
+      pcall(telescope.load_extension, "ui-select")
     end,
   },
 }
