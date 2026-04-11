@@ -17,6 +17,7 @@ return {
     dependencies = {
       "nvim-lua/plenary.nvim",
       fzf,
+      ui_select,
     },
     opts = {
       defaults = {

@@ -29,7 +29,7 @@ Each plugin is configured in its own file under `lua/plugins/`. The configuratio
 - **Linting**: `linter.lua` - nvim-lint with mason-nvim-lint for code linting
 - **Fuzzy Finding**: `telescope.lua` - Telescope with fzf and ui-select extensions
 - **Git Integration**: `gitsigns.lua`, `fugitive.lua` - Git status, blame, and commands
-- **AI Assistance**: `copilot.lua`, `avante.lua` - GitHub Copilot and Avante AI integration
+- **AI Assistance**: `copilot.lua` - GitHub Copilot integration
 
 ## Development Commands
 
