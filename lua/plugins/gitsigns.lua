@@ -6,23 +6,23 @@ return {
       local gitsigns = require("gitsigns")
       vim.keymap.set("n", "[g", function()
         gitsigns.nav_hunk("prev")
-      end, { buffer = bufnr, desc = "prev hunk" })
+      end, { buffer = bufnr, desc = "Previous Hunk" })
       vim.keymap.set("n", "]g", function()
         gitsigns.nav_hunk("next")
-      end, { buffer = bufnr, desc = "next hunk" })
+      end, { buffer = bufnr, desc = "Next Hunk" })
       vim.keymap.set("n", "<leader>gb", function()
         gitsigns.blame()
-      end, { buffer = bufnr, desc = "[g]it [b]lame" })
+      end, { buffer = bufnr, desc = "Blame Buffer" })
       vim.keymap.set("n", "<leader>gl", function()
         gitsigns.blame_line()
-      end, { buffer = bufnr, desc = "[g]it blame [l]ine" })
+      end, { buffer = bufnr, desc = "Blame Line" })
       vim.keymap.set("n", "<leader>gr", function()
         gitsigns.reset_hunk()
-      end, { buffer = bufnr, desc = "[g]it [r]eset hunk" })
+      end, { buffer = bufnr, desc = "Reset Hunk" })
       vim.keymap.set("n", "<leader>gd", function()
         gitsigns.diffthis()
-      end, { buffer = bufnr, desc = "[g]it [d]iff" })
-      vim.keymap.set("n", "gp", function()
+      end, { buffer = bufnr, desc = "Diff This" })
+      vim.keymap.set("n", "<leader>gp", function()
         local filepath = vim.fn.expand("%:p")
         local line = vim.api.nvim_win_get_cursor(0)[1]
 
@@ -34,7 +34,6 @@ return {
 
         local head_ref = vim.fn.systemlist("git symbolic-ref refs/remotes/origin/HEAD")[1]
         local rel_path = filepath:gsub(git_root .. "/", "")
-        local commit = vim.fn.systemlist("git rev-parse HEAD")[1]
         local remote = vim.fn.systemlist("git remote get-url origin")[1]
         local default_branch = head_ref and head_ref:match("refs/remotes/origin/(.+)")
         if not default_branch then
@@ -56,7 +55,8 @@ return {
         local permalink = string.format("%s/blob/%s/%s#L%d", github_repo_url, default_branch, rel_path, line)
 
         vim.fn.setreg("+", permalink)
-      end, { buffer = bufnr, desc = "[g]it [p]ermalink" })
+        vim.notify("Copied permalink to clipboard")
+      end, { buffer = bufnr, desc = "Copy Permalink" })
     end,
   },
 }

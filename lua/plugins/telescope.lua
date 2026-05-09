@@ -28,7 +28,6 @@ return {
 
             ["<Down>"] = "preview_scrolling_down",
             ["<Up>"] = "preview_scrolling_up",
-
           },
         },
       },
@@ -56,27 +55,11 @@ return {
       local builtin = require("telescope.builtin")
 
       return {
-        { "<leader>tr", builtin.resume, desc = "[t]elescope [r]esume" },
-        { "<leader><space>", builtin.buffers, desc = "[<Space>] Find existing buffers" },
+        { "<leader><space>", builtin.buffers, desc = "Buffers" },
+        { "<leader>ff", builtin.find_files, desc = "Find Files" },
+        { "<leader>fg", builtin.live_grep, desc = "Live Grep" },
 
-        -- File pickers
-        { "<leader>ff", builtin.find_files, desc = "[s]earch [f]iles" },
-        -- { "<leader>gf", builtin.git_files, desc = "[s]earch [g]it files" },
-        { "<leader>fh", builtin.help_tags, desc = "[s]earch [h]elp" },
-
-        -- Search pickers
-        { "<leader>fg", builtin.live_grep, desc = "[l]ive [g]rep" },
-        -- { "<leader>gw", builtin.grep_string, desc = "[g]rep [w]ord under cursor" },
-
-        -- Git pickers
-        -- { "<leader>gb", builtin.git_branches, desc = "[g]it [s]witch" },
-
-        -- Document pickers
-        { "<leader>lds", builtin.lsp_document_symbols, desc = "[l]sp [d]ocument [s]ymbols" },
-        { "<leader>lws", builtin.lsp_dynamic_workspace_symbols, desc = "[l]sp [w]orkspace [s]ymbols" },
-
-        -- I don't use these as often. Consider removing?
-        { "<leader>?", builtin.oldfiles, desc = "[?] Find recently opened files" },
+        { "<leader>?", builtin.oldfiles, desc = "Recent Files" },
         {
           "<leader>/",
           function()
@@ -86,9 +69,9 @@ return {
               previewer = false,
             }))
           end,
-          desc = "[/] Fuzzily search in current buffer",
+          desc = "Search in Current Buffer",
         },
-        { "<leader>gcf", builtin.git_status, desc = "[g]ithub [c]hanged [f]iles" },
+        { "<leader>gcf", builtin.git_status, desc = "Changed Files" },
       }
     end,
     config = function(_, opts)

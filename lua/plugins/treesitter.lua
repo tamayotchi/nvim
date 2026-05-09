@@ -37,55 +37,6 @@ local autotag_filetypes = {
   "xml",
 }
 
-local textobject_labels = {
-  ["@function.outer"] = "Function",
-  ["@class.outer"] = "Class",
-  ["@parameter.inner"] = "Parameter",
-}
-
-local textobject_moves = {
-  {
-    method = "goto_next_start",
-    direction = "Next",
-    boundary = "Start",
-    keymaps = {
-      ["]f"] = "@function.outer",
-      ["]c"] = "@class.outer",
-      ["]a"] = "@parameter.inner",
-    },
-  },
-  {
-    method = "goto_next_end",
-    direction = "Next",
-    boundary = "End",
-    keymaps = {
-      ["]F"] = "@function.outer",
-      ["]C"] = "@class.outer",
-      ["]A"] = "@parameter.inner",
-    },
-  },
-  {
-    method = "goto_previous_start",
-    direction = "Prev",
-    boundary = "Start",
-    keymaps = {
-      ["[f"] = "@function.outer",
-      ["[c"] = "@class.outer",
-      ["[a"] = "@parameter.inner",
-    },
-  },
-  {
-    method = "goto_previous_end",
-    direction = "Prev",
-    boundary = "End",
-    keymaps = {
-      ["[F"] = "@function.outer",
-      ["[C"] = "@class.outer",
-      ["[A"] = "@parameter.inner",
-    },
-  },
-}
-
 local function install_missing_parsers(treesitter)
   local installed = treesitter.get_installed()
   local missing = vim.tbl_filter(function(parser)
@@ -137,27 +88,6 @@ local function setup_treesitter(_, opts)
   })
 end
 
-local function setup_textobjects()
-  require("nvim-treesitter-textobjects").setup({
-    move = {
-      set_jumps = true,
-    },
-  })
-
-  local move = require("nvim-treesitter-textobjects.move")
-
-  for _, spec in ipairs(textobject_moves) do
-    for lhs, query in pairs(spec.keymaps) do
-      vim.keymap.set({ "n", "x", "o" }, lhs, function()
-        move[spec.method](query, "textobjects")
-      end, {
-        desc = string.format("%s %s %s", spec.direction, textobject_labels[query], spec.boundary),
-        silent = true,
-      })
-    end
-  end
-end
-
 return {
   {
     "nvim-treesitter/nvim-treesitter",
@@ -170,15 +100,6 @@ return {
     },
     config = setup_treesitter,
   },
-
-  {
-    "nvim-treesitter/nvim-treesitter-textobjects",
-    branch = "main",
-    dependencies = "nvim-treesitter/nvim-treesitter",
-    event = "VeryLazy",
-    config = setup_textobjects,
-  },
-
   {
     "windwp/nvim-ts-autotag",
     ft = autotag_filetypes,

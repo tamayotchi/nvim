@@ -11,38 +11,15 @@ return {
         function()
           require("harpoon"):list():add()
         end,
-        desc = "[h]arpoon [a]dd",
+        desc = "Add File",
       },
       {
         "<C-e>",
         function()
           require("harpoon").ui:toggle_quick_menu(require("harpoon"):list())
         end,
+        desc = "Toggle Harpoon Menu",
       },
-      -- {
-      --   "<C-s>",
-      --   function()
-      --     harpoon:list():select(1)
-      --   end,
-      -- },
-      -- {
-      --   "<C-f>",
-      --   function()
-      --     harpoon:list():select(2)
-      --   end,
-      -- },
-      -- {
-      --   "<C-k>",
-      --   function()
-      --     harpoon:list():select(3)
-      --   end,
-      -- },
-      -- {
-      --   "<C-l>",
-      --   function()
-      --     harpoon:list():select(4)
-      --   end,
-      -- },
     }
   end,
   opts = {

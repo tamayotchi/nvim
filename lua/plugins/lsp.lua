@@ -82,16 +82,13 @@ return {
             vim.keymap.set(mode, keys, func, { buffer = args.buf, desc = desc })
           end
 
-          map("gd", vim.lsp.buf.definition, "Goto Definition")
+          map("gd", vim.lsp.buf.definition, "Go to Definition")
           map("gr", vim.lsp.buf.references, "References")
-          map("gI", vim.lsp.buf.implementation, "Goto Implementation")
-          map("gy", vim.lsp.buf.type_definition, "Goto Type Definition")
-          map("gD", vim.lsp.buf.declaration, "Goto Declaration")
           map("K", vim.lsp.buf.hover, "Hover")
           map("gK", vim.lsp.buf.signature_help, "Signature Help")
           map("<c-k>", vim.lsp.buf.signature_help, "Signature Help", "i")
-          map("<leader>lca", vim.lsp.buf.code_action, "[l]sp [c]ode [a]ction", { "n", "v" })
-          map("<leader>lR", vim.lsp.buf.rename, "[l]sp [R]ename")
+          map("<leader>lca", vim.lsp.buf.code_action, "Code Action", { "n", "v" })
+          map("<leader>lR", vim.lsp.buf.rename, "Rename Symbol")
 
           -- Enable inlay hints if supported
           local client = vim.lsp.get_client_by_id(args.data.client_id)
