@@ -74,7 +74,7 @@ opt.updatetime = 200
 opt.timeoutlen = 300
 
 -- Clipboard
-opt.clipboard = vim.env.SSH_TTY and "" or "unnamedplus"
+opt.clipboard = ""
 
 -- Formatting
 opt.formatexpr = "v:lua.vim.lsp.formatexpr()"

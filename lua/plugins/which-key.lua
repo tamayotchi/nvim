@@ -1,8 +1,13 @@
 return {
   "folke/which-key.nvim",
-  event = "VeryLazy",
+  lazy = false,
   opts = {
     preset = "helix",
+    delay = 0,
+    triggers = {
+      { "<leader>", mode = { "n", "v" } },
+      { "<auto>", mode = "nxso" },
+    },
     spec = {
       {
         mode = { "n", "v" },
@@ -20,7 +25,7 @@ return {
         { "<leader>u", group = "ui" },
         { "<leader>w", group = "windows" },
         { "<leader>x", group = "diagnostics/quickfix" },
-        { "<leader>y", group = "yank/competitive" },
+        { "<leader>y", group = "yank" },
         { "[", group = "prev" },
         { "]", group = "next" },
         { "g", group = "goto" },

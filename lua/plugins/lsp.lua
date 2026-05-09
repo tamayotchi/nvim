@@ -2,7 +2,7 @@ return {
   -- LSP configuration
   {
     "neovim/nvim-lspconfig",
-    event = "VeryLazy",
+    event = { "BufReadPre", "BufNewFile" },
     dependencies = {
       "williamboman/mason.nvim",
       "williamboman/mason-lspconfig.nvim",
@@ -136,6 +136,7 @@ return {
         "terraform-ls",
         "typescript-language-server",
         -- Formatters
+        "biome",
         "clang-format",
         "prettierd",
         "jq",

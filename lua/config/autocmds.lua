@@ -116,25 +116,3 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
   end,
 })
-
-local function show_vtip()
-  vim.system({ "curl", "-s", "-m", "3", "https://vtip.43z.one/" }, { text = true }, function(result)
-    if result.code ~= 0 then
-      return
-    end
-
-    local tip = vim.trim(result.stdout or "")
-    vim.schedule(function()
-      vim.notify(tip, vim.log.levels.INFO, {
-        title = "Vim tip",
-        timeout = 15000,
-      })
-    end)
-  end)
-end
-
--- Show a random Vim tip on startup
-vim.api.nvim_create_autocmd("VimEnter", {
-  group = augroup("startup_tip"),
-  callback = show_vtip,
-})
