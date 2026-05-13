@@ -77,6 +77,7 @@ local function setup_treesitter(_, opts)
 
   treesitter.setup(opts)
   vim.treesitter.language.register("json", { "jsonc" })
+  vim.treesitter.language.register("markdown", "octo")
 
   install_missing_parsers(treesitter)
 

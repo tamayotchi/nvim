@@ -16,7 +16,7 @@ return {
       vim.keymap.set("n", "<leader>gl", function()
         gitsigns.blame_line()
       end, { buffer = bufnr, desc = "Blame Line" })
-      vim.keymap.set("n", "<leader>gr", function()
+      vim.keymap.set("n", "<leader>gR", function()
         gitsigns.reset_hunk()
       end, { buffer = bufnr, desc = "Reset Hunk" })
       vim.keymap.set("n", "<leader>gd", function()

@@ -46,23 +46,63 @@ return {
       },
     },
     config = function(_, opts)
+      local omarchy_theme_dir = vim.fn.expand("~/.config/omarchy/current/theme")
+
+      local function read_omarchy_colors()
+        local colors = {}
+        local path = omarchy_theme_dir .. "/colors.toml"
+
+        if vim.fn.filereadable(path) == 0 then
+          return colors
+        end
+
+        for _, line in ipairs(vim.fn.readfile(path)) do
+          local key, value = line:match('^%s*([%w_]+)%s*=%s*"(#[%x]+)"')
+          if key and value then
+            colors[key] = value
+          end
+        end
+
+        return colors
+      end
+
+      local function is_light_hex(hex)
+        local r, g, b = hex:match("#(%x%x)(%x%x)(%x%x)")
+        if not r then
+          return false
+        end
+
+        local luminance = (0.2126 * tonumber(r, 16) + 0.7152 * tonumber(g, 16) + 0.0722 * tonumber(b, 16)) / 255
+        return luminance > 0.5
+      end
+
+      local theme_colors = read_omarchy_colors()
+      local is_light = vim.fn.filereadable(omarchy_theme_dir .. "/light.mode") == 1
+        or (theme_colors.background and is_light_hex(theme_colors.background))
+
+      vim.o.background = is_light and "light" or "dark"
+      opts.flavour = is_light and "latte" or "mocha"
+
       require("catppuccin").setup(opts)
       vim.cmd.colorscheme("catppuccin")
 
-      -- Helix/Omarchy-like transparent palette. The font is still owned by
-      -- the terminal; these highlights remove Neovim's heavier Catppuccin
-      -- backgrounds/bold styles so glyphs look closer to hx.
+      -- Helix/Omarchy-like transparent palette. Pull colors from the active
+      -- Omarchy theme so Neovim stays readable when switching between dark and
+      -- light modes while keeping the terminal background visible.
       local c = {
         bg = "NONE",
-        fg = "#e6e6e6",
-        color0 = "#262626",
-        color1 = "#e65c5c",
-        color2 = "#66cc66",
-        color3 = "#ffcc66",
-        color4 = "#6699ff",
-        color5 = "#cc66cc",
-        color6 = "#66cccc",
-        color8 = "#404040",
+        fg = theme_colors.foreground or (is_light and "#4c4f69" or "#e6e6e6"),
+        float_bg = theme_colors.background or (is_light and "#eff1f5" or "#000000"),
+        selection_fg = theme_colors.selection_foreground or (is_light and "#eff1f5" or "#000000"),
+        selection_bg = theme_colors.selection_background or (is_light and "#dc8a78" or "#ffcc66"),
+        color0 = theme_colors.color0 or (is_light and "#bcc0cc" or "#262626"),
+        color1 = theme_colors.color1 or (is_light and "#d20f39" or "#e65c5c"),
+        color2 = theme_colors.color2 or (is_light and "#40a02b" or "#66cc66"),
+        color3 = theme_colors.color3 or (is_light and "#df8e1d" or "#ffcc66"),
+        color4 = theme_colors.color4 or (is_light and "#1e66f5" or "#6699ff"),
+        color5 = theme_colors.color5 or (is_light and "#ea76cb" or "#cc66cc"),
+        color6 = theme_colors.color6 or (is_light and "#179299" or "#66cccc"),
+        color8 = theme_colors.color8 or (is_light and "#7c7f93" or "#404040"),
       }
 
       local function hl(group, opts_hl)
@@ -80,11 +120,24 @@ return {
       hl("CursorLineNr", { fg = c.fg, bg = c.bg })
       hl("CursorLine", { bg = c.color0 })
       hl("Visual", { bg = c.color0 })
-      hl("Search", { fg = "#000000", bg = c.color3 })
-      hl("IncSearch", { fg = "#000000", bg = c.color3 })
-      hl("Pmenu", { fg = c.fg, bg = "#000000" })
-      hl("PmenuSel", { fg = "#000000", bg = c.fg })
+      hl("Search", { fg = c.selection_fg, bg = c.selection_bg })
+      hl("IncSearch", { fg = c.selection_fg, bg = c.selection_bg })
+      hl("Pmenu", { fg = c.fg, bg = c.float_bg })
+      hl("PmenuSel", { fg = c.selection_fg, bg = c.selection_bg })
       hl("WinSeparator", { fg = c.color8, bg = c.bg })
+
+      hl("TelescopeNormal", { fg = c.fg, bg = c.bg })
+      hl("TelescopeBorder", { fg = c.color8, bg = c.bg })
+      hl("TelescopeTitle", { fg = c.fg, bg = c.color0 })
+      hl("TelescopePromptNormal", { fg = c.fg, bg = c.bg })
+      hl("TelescopePromptBorder", { fg = c.color8, bg = c.bg })
+      hl("TelescopePromptPrefix", { fg = c.color1, bg = c.bg })
+      hl("TelescopeResultsNormal", { fg = c.fg, bg = c.bg })
+      hl("TelescopeResultsBorder", { fg = c.color8, bg = c.bg })
+      hl("TelescopePreviewNormal", { fg = c.fg, bg = c.bg })
+      hl("TelescopePreviewBorder", { fg = c.color8, bg = c.bg })
+      hl("TelescopeSelection", { fg = c.fg, bg = c.color0 })
+      hl("TelescopeMatching", { fg = c.color4, bold = true })
 
       hl("Comment", { fg = c.color8, italic = true })
       hl("Keyword", { fg = c.color5 })

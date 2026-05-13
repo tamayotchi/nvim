@@ -18,6 +18,7 @@ return {
         { "<leader>f", group = "Find / Format" },
         { "<leader>g", group = "Git" },
         { "<leader>gc", group = "Changes" },
+        { "<leader>gr", group = "Reviews" },
         { "<leader>h", group = "Harpoon" },
         { "<leader>l", group = "LSP" },
         { "<leader>q", group = "Quit" },
