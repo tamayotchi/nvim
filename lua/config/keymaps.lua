@@ -51,5 +51,5 @@ keymap.set("n", "<leader>qq", "<cmd>qa<cr>", { desc = "Quit All" })
 
 -- Yank
 keymap.set("n", "<leader>yy", '"+yy', { desc = "Yank line to system clipboard" })
-keymap.set("x", "<leader>yy", '"+y', { desc = "Yank selection to system clipboard" })
+keymap.set("x", "<leader>y", '"+y', { desc = "Yank selection to system clipboard" })
 keymap.set("n", "<leader>Y", '"+y$', { desc = "Yank to end of line to system clipboard" })

@@ -1,205 +1,216 @@
-return {
+local omarchy_current_theme_file = vim.fn.expand("~/.config/omarchy/current/theme/neovim.lua")
+local omarchy_theme_roots = {
+  vim.fn.expand("~/.local/share/omarchy/themes"),
+  vim.fn.expand("~/.config/omarchy/themes"),
+}
+
+local function notify(message, level)
+  vim.schedule(function()
+    vim.notify(message, level or vim.log.levels.WARN, { title = "Omarchy colorscheme" })
+  end)
+end
+
+local function has_omarchy_theme()
+  return vim.fn.filereadable(omarchy_current_theme_file) == 1
+end
+
+local function theme_from_file(file)
+  if vim.fn.filereadable(file) == 0 then
+    return {}, {}
+  end
+
+  local ok, specs = pcall(dofile, file)
+  if not ok then
+    notify("Could not load " .. file .. ": " .. tostring(specs))
+    return {}, {}
+  end
+
+  if type(specs) ~= "table" then
+    notify(file .. " did not return a Lazy spec table")
+    return {}, {}
+  end
+
+  local theme_specs = {}
+  local lazyvim_opts = {}
+
+  for _, spec in ipairs(specs) do
+    if type(spec) == "table" and spec[1] == "LazyVim/LazyVim" then
+      if type(spec.opts) == "table" then
+        lazyvim_opts = vim.tbl_deep_extend("force", lazyvim_opts, spec.opts)
+      end
+    elseif type(spec) == "table" then
+      -- Omarchy theme files are written as LazyVim specs. Reuse the theme
+      -- plugin specs, but never import LazyVim itself into this config.
+      table.insert(theme_specs, vim.deepcopy(spec))
+    end
+  end
+
+  return theme_specs, lazyvim_opts
+end
+
+local function installable_theme_specs()
+  local specs = {}
+  local seen_files = {}
+
+  local function add_file(file)
+    file = vim.fn.fnamemodify(file, ":p")
+    if seen_files[file] then
+      return
+    end
+    seen_files[file] = true
+
+    local theme_specs = theme_from_file(file)
+    for _, spec in ipairs(theme_specs) do
+      spec.lazy = true
+      if spec.priority == nil then
+        spec.priority = 1000
+      end
+      table.insert(specs, spec)
+    end
+  end
+
+  for _, root in ipairs(omarchy_theme_roots) do
+    for _, file in ipairs(vim.fn.globpath(root, "*/neovim.lua", false, true)) do
+      add_file(file)
+    end
+  end
+
+  -- Include the active theme too. This covers freshly-installed Omarchy themes
+  -- that are already copied to ~/.config/omarchy/current/theme.
+  add_file(omarchy_current_theme_file)
+
+  return specs
+end
+
+local function plugin_name(spec)
+  if type(spec.name) == "string" then
+    return spec.name
+  end
+
+  if type(spec[1]) == "string" then
+    return spec[1]:match("/([^/]+)$") or spec[1]
+  end
+end
+
+local function load_plugins(plugins)
+  if #plugins == 0 then
+    return true
+  end
+
+  local ok, err = pcall(function()
+    require("lazy").load({ plugins = plugins })
+  end)
+
+  if not ok then
+    notify("Could not load colorscheme plugins: " .. tostring(err))
+  end
+
+  return ok
+end
+
+local function load_theme_plugins(theme_specs)
+  local plugins = {}
+  local seen = {}
+
+  for _, spec in ipairs(theme_specs) do
+    local name = plugin_name(spec)
+    if name and not seen[name] then
+      seen[name] = true
+      table.insert(plugins, name)
+    end
+  end
+
+  load_plugins(plugins)
+end
+
+local function apply_colorscheme(colorscheme)
+  vim.o.termguicolors = true
+
+  if type(colorscheme) == "function" then
+    colorscheme()
+    return
+  end
+
+  if type(colorscheme) == "string" and colorscheme ~= "" then
+    vim.cmd.colorscheme(colorscheme)
+    return
+  end
+
+  -- LazyVim's default colorscheme is TokyoNight moon.
+  load_plugins({ "tokyonight.nvim" })
+  vim.cmd.colorscheme("tokyonight")
+end
+
+local function apply_current_omarchy_theme()
+  local theme_specs, lazyvim_opts = theme_from_file(omarchy_current_theme_file)
+  load_theme_plugins(theme_specs)
+  apply_colorscheme(lazyvim_opts.colorscheme)
+end
+
+local specs = {
+  -- LazyVim default/fallback.
   {
     "folke/tokyonight.nvim",
-    lazy = false,
+    lazy = true,
     priority = 1000,
     opts = { style = "moon" },
   },
-
-  {
-    "catppuccin/nvim",
-    name = "catppuccin",
-    lazy = false,
-    priority = 1000,
-    opts = {
-      transparent_background = true,
-      term_colors = true,
-      styles = {
-        comments = { "italic" },
-        conditionals = { "italic" },
-        keywords = { "italic" },
-        parameters = { "italic" },
-      },
-      lsp_styles = {
-        underlines = {
-          errors = { "undercurl" },
-          hints = { "undercurl" },
-          warnings = { "undercurl" },
-          information = { "undercurl" },
-        },
-      },
-      integrations = {
-        blink_cmp = true,
-        fidget = true,
-        flash = true,
-        gitsigns = true,
-        harpoon = true,
-        illuminate = true,
-        indent_blankline = { enabled = true },
-        lsp_trouble = true,
-        mason = true,
-        mini = true,
-        noice = true,
-        telescope = true,
-        treesitter_context = true,
-        which_key = true,
-      },
-    },
-    config = function(_, opts)
-      local omarchy_theme_dir = vim.fn.expand("~/.config/omarchy/current/theme")
-
-      local function read_omarchy_colors()
-        local colors = {}
-        local path = omarchy_theme_dir .. "/colors.toml"
-
-        if vim.fn.filereadable(path) == 0 then
-          return colors
-        end
-
-        for _, line in ipairs(vim.fn.readfile(path)) do
-          local key, value = line:match('^%s*([%w_]+)%s*=%s*"(#[%x]+)"')
-          if key and value then
-            colors[key] = value
-          end
-        end
-
-        return colors
-      end
-
-      local function is_light_hex(hex)
-        local r, g, b = hex:match("#(%x%x)(%x%x)(%x%x)")
-        if not r then
-          return false
-        end
-
-        local luminance = (0.2126 * tonumber(r, 16) + 0.7152 * tonumber(g, 16) + 0.0722 * tonumber(b, 16)) / 255
-        return luminance > 0.5
-      end
-
-      local theme_colors = read_omarchy_colors()
-      local is_light = vim.fn.filereadable(omarchy_theme_dir .. "/light.mode") == 1
-        or (theme_colors.background and is_light_hex(theme_colors.background))
-
-      vim.o.background = is_light and "light" or "dark"
-      opts.flavour = is_light and "latte" or "mocha"
-
-      require("catppuccin").setup(opts)
-      vim.cmd.colorscheme("catppuccin")
-
-      -- Helix/Omarchy-like transparent palette. Pull colors from the active
-      -- Omarchy theme so Neovim stays readable when switching between dark and
-      -- light modes while keeping the terminal background visible.
-      local c = {
-        bg = "NONE",
-        fg = theme_colors.foreground or (is_light and "#4c4f69" or "#e6e6e6"),
-        float_bg = theme_colors.background or (is_light and "#eff1f5" or "#000000"),
-        selection_fg = theme_colors.selection_foreground or (is_light and "#eff1f5" or "#000000"),
-        selection_bg = theme_colors.selection_background or (is_light and "#dc8a78" or "#ffcc66"),
-        color0 = theme_colors.color0 or (is_light and "#bcc0cc" or "#262626"),
-        color1 = theme_colors.color1 or (is_light and "#d20f39" or "#e65c5c"),
-        color2 = theme_colors.color2 or (is_light and "#40a02b" or "#66cc66"),
-        color3 = theme_colors.color3 or (is_light and "#df8e1d" or "#ffcc66"),
-        color4 = theme_colors.color4 or (is_light and "#1e66f5" or "#6699ff"),
-        color5 = theme_colors.color5 or (is_light and "#ea76cb" or "#cc66cc"),
-        color6 = theme_colors.color6 or (is_light and "#179299" or "#66cccc"),
-        color8 = theme_colors.color8 or (is_light and "#7c7f93" or "#404040"),
-      }
-
-      local function hl(group, opts_hl)
-        vim.api.nvim_set_hl(0, group, opts_hl)
-      end
-
-      hl("Normal", { fg = c.fg, bg = c.bg })
-      hl("NormalNC", { fg = c.fg, bg = c.bg })
-      hl("NormalFloat", { fg = c.fg, bg = c.bg })
-      hl("FloatBorder", { fg = c.color8, bg = c.bg })
-      hl("SignColumn", { fg = c.color8, bg = c.bg })
-      hl("FoldColumn", { fg = c.color8, bg = c.bg })
-      hl("EndOfBuffer", { fg = c.color8, bg = c.bg })
-      hl("LineNr", { fg = c.color8, bg = c.bg })
-      hl("CursorLineNr", { fg = c.fg, bg = c.bg })
-      hl("CursorLine", { bg = c.color0 })
-      hl("Visual", { bg = c.color0 })
-      hl("Search", { fg = c.selection_fg, bg = c.selection_bg })
-      hl("IncSearch", { fg = c.selection_fg, bg = c.selection_bg })
-      hl("Pmenu", { fg = c.fg, bg = c.float_bg })
-      hl("PmenuSel", { fg = c.selection_fg, bg = c.selection_bg })
-      hl("WinSeparator", { fg = c.color8, bg = c.bg })
-
-      hl("TelescopeNormal", { fg = c.fg, bg = c.bg })
-      hl("TelescopeBorder", { fg = c.color8, bg = c.bg })
-      hl("TelescopeTitle", { fg = c.fg, bg = c.color0 })
-      hl("TelescopePromptNormal", { fg = c.fg, bg = c.bg })
-      hl("TelescopePromptBorder", { fg = c.color8, bg = c.bg })
-      hl("TelescopePromptPrefix", { fg = c.color1, bg = c.bg })
-      hl("TelescopeResultsNormal", { fg = c.fg, bg = c.bg })
-      hl("TelescopeResultsBorder", { fg = c.color8, bg = c.bg })
-      hl("TelescopePreviewNormal", { fg = c.fg, bg = c.bg })
-      hl("TelescopePreviewBorder", { fg = c.color8, bg = c.bg })
-      hl("TelescopeSelection", { fg = c.fg, bg = c.color0 })
-      hl("TelescopeMatching", { fg = c.color4, bold = true })
-
-      hl("Comment", { fg = c.color8, italic = true })
-      hl("Keyword", { fg = c.color5 })
-      hl("Conditional", { fg = c.color5, italic = true })
-      hl("Repeat", { fg = c.color5, italic = true })
-      hl("Statement", { fg = c.color5 })
-      hl("Function", { fg = c.color4 })
-      hl("Type", { fg = c.color3 })
-      hl("Constant", { fg = c.color3 })
-      hl("String", { fg = c.color2 })
-      hl("Character", { fg = c.color6 })
-      hl("Number", { fg = c.color3 })
-      hl("Boolean", { fg = c.color3 })
-      hl("Identifier", { fg = c.fg })
-      hl("Operator", { fg = c.color6 })
-      hl("Delimiter", { fg = c.color8 })
-      hl("Special", { fg = c.color5 })
-      hl("Directory", { fg = c.color4 })
-
-      hl("@comment", { link = "Comment" })
-      hl("@keyword", { fg = c.color5 })
-      hl("@keyword.return", { fg = c.color5, italic = true })
-      hl("@keyword.conditional", { fg = c.color5, italic = true })
-      hl("@keyword.repeat", { fg = c.color5, italic = true })
-      hl("@keyword.function", { fg = c.color5 })
-      hl("@function", { fg = c.color4 })
-      hl("@function.builtin", { fg = c.color4 })
-      hl("@function.call", { fg = c.color4 })
-      hl("@method", { fg = c.color4 })
-      hl("@method.call", { fg = c.color4 })
-      hl("@type", { fg = c.color3 })
-      hl("@type.builtin", { fg = c.color5 })
-      hl("@constructor", { fg = c.color4 })
-      hl("@constant", { fg = c.color3 })
-      hl("@constant.builtin", { fg = c.color3 })
-      hl("@number", { fg = c.color3 })
-      hl("@boolean", { fg = c.color3 })
-      hl("@string", { fg = c.color2 })
-      hl("@character", { fg = c.color6 })
-      hl("@variable", { fg = c.fg })
-      hl("@variable.parameter", { fg = c.color5, italic = true })
-      hl("@variable.builtin", { fg = c.color1 })
-      hl("@property", { fg = c.color4 })
-      hl("@field", { fg = c.color4 })
-      hl("@punctuation", { fg = c.color8 })
-      hl("@punctuation.bracket", { fg = c.color8 })
-      hl("@punctuation.delimiter", { fg = c.color8 })
-      hl("@operator", { fg = c.color6 })
-      hl("@tag", { fg = c.color4 })
-      hl("@tag.attribute", { fg = c.color3 })
-      hl("@namespace", { fg = c.color3, italic = true })
-
-      hl("@lsp.type.function", { link = "@function" })
-      hl("@lsp.type.method", { link = "@function" })
-      hl("@lsp.type.interface", { link = "@type" })
-      hl("@lsp.type.class", { link = "@type" })
-      hl("@lsp.type.type", { link = "@type" })
-      hl("@lsp.type.parameter", { link = "@variable.parameter" })
-      hl("@lsp.type.property", { link = "@property" })
-      hl("@lsp.mod.readonly", {})
-      hl("@lsp.mod.declaration", {})
-      hl("@lsp.mod.defaultLibrary", {})
-    end,
-  },
 }
+
+vim.list_extend(specs, installable_theme_specs())
+
+table.insert(specs, {
+  name = "omarchy-colorscheme-loader",
+  dir = vim.fn.stdpath("config"),
+  lazy = false,
+  priority = 0,
+  config = function()
+    local omarchy_enabled = has_omarchy_theme()
+    local ok, err = pcall(function()
+      if omarchy_enabled then
+        apply_current_omarchy_theme()
+      else
+        apply_colorscheme(nil)
+      end
+    end)
+
+    if not ok then
+      notify("Could not apply colorscheme: " .. tostring(err))
+      load_plugins({ "tokyonight.nvim" })
+      pcall(vim.cmd.colorscheme, "tokyonight")
+    end
+
+    local server
+    if omarchy_enabled then
+      local server_dir = (vim.env.XDG_RUNTIME_DIR or vim.fn.stdpath("run")) .. "/nvim-omarchy"
+      vim.fn.mkdir(server_dir, "p")
+
+      server = server_dir .. "/" .. vim.fn.getpid() .. ".pipe"
+      pcall(vim.fn.delete, server)
+      pcall(vim.fn.serverstart, server)
+    end
+
+    vim.api.nvim_create_user_command("OmarchyColorscheme", function()
+      local reload_ok, reload_err = pcall(function()
+        if has_omarchy_theme() then
+          apply_current_omarchy_theme()
+        else
+          apply_colorscheme(nil)
+        end
+      end)
+      if not reload_ok then
+        notify("Could not reload colorscheme: " .. tostring(reload_err))
+      end
+    end, { desc = "Reload colorscheme from ~/.config/omarchy/current/theme/neovim.lua" })
+
+    if server then
+      vim.api.nvim_create_autocmd("VimLeavePre", {
+        callback = function()
+          pcall(vim.fn.delete, server)
+        end,
+      })
+    end
+  end,
+})
+
+return specs
