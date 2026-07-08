@@ -35,13 +35,15 @@ return {
       },
       servers = {
         bashls = {},
+        biome = {},
         clangd = {},
         dockerls = {},
         jsonls = {},
         pyright = {},
         elixirls = {},
         terraformls = {},
-        ts_ls = {},
+        -- Native TypeScript 7 LSP (installed by Mason as `tsgo`).
+        tsgo = {},
         lua_ls = {
           settings = {
             Lua = {
@@ -73,6 +75,10 @@ return {
     config = function(_, opts)
       -- Setup diagnostics
       vim.diagnostic.config(vim.deepcopy(opts.diagnostics))
+
+      vim.api.nvim_create_user_command("LspInfo", function()
+        vim.cmd("checkhealth vim.lsp")
+      end, { desc = "Show LSP health/info" })
 
       -- Setup keymaps on LSP attach
       vim.api.nvim_create_autocmd("LspAttach", {
@@ -131,7 +137,7 @@ return {
         "lua-language-server",
         "pyright",
         "terraform-ls",
-        "typescript-language-server",
+        "tsgo",
         -- Formatters
         "biome",
         "clang-format",
@@ -162,7 +168,8 @@ return {
   {
     "williamboman/mason-lspconfig.nvim",
     opts = {
-      automatic_installation = false, -- Mason handles installation centrally
+      -- LSP servers are enabled explicitly in opts.servers above.
+      automatic_enable = false,
     },
     config = function(_, opts)
       require("mason-lspconfig").setup(opts)
